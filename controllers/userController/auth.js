@@ -9,16 +9,15 @@ var options = {};
 options.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 options.secretOrKey = process.env.JWT_SECRET;
 //const errorHandler = require('../validators/index'); 
-var { proper_date } = require('../../helpers/help');
-var today = new Date();
+
 var localOpts = {
-    usernameField: 'username',
+    usernameField: 'email',
 };
 
-var localStrategy = new LocalStrategy(localOpts, async(username, password, done) => {
+var localStrategy = new LocalStrategy(localOpts, async (email, password, done) => {
 
     var user = await Users.findOne({
-        where: { username: username }
+        where: { email: email }
     });
 
     var isValidPassword = (userpass, password) => {
@@ -39,7 +38,7 @@ exports.authLocal = passport.authenticate('local', {
 
 exports.loginUser = (req, res) => {
     var userId = req.user.id
-        //console.log(req.user.id);
+    //console.log(req.user.id);
     if (userId) {
         const payload = {
             id: req.user.id,
@@ -48,21 +47,13 @@ exports.loginUser = (req, res) => {
             email: req.user.email,
             //password: req.user.password,
             mobile_no: req.user.mobile_no,
-            address: req.user.address,
-            username: req.user.username,
-            cur_company: req.user.cur_company,
-            status: req.user.status,
-            role: req.user.role,
-            role_detail: req.user.role_detail,
-            created_by: req.user.created_by,
-            modified_by: req.user.modified_by,
-            login_date: req.user.login_date
+            //username: req.user.username
         }
         options = {
             subject: `${userId}`,
             expiresIn: '365d'
         }
-        const token = jwt.sign(payload, keys.JWT_SECRET, options);
+        const token = jwt.sign(payload, process.env.JWT_SECRET, options);
         return res.status(200).json({
             //"data":req.user,
             "token": token
@@ -72,7 +63,7 @@ exports.loginUser = (req, res) => {
     return res.status(400).json({ data: req.user })
 }
 
-var jwtStrategy = new JwtStrategy(options, async function(jwtPayload, done) {
+var jwtStrategy = new JwtStrategy(options, async function (jwtPayload, done) {
     //console.log(jwtPayload);   
     var user = await Users.findByPk(jwtPayload.sub);
     //console.log(user);
@@ -97,7 +88,7 @@ exports.isAdmin = (req, res, next) => {
     next();
 };
 
-exports.signup = async(req, res) => {
+exports.signup = async (req, res) => {
     try {
         var {
             first_name,
@@ -144,7 +135,6 @@ exports.signup = async(req, res) => {
             role_detail: 'Employee',
             created_by: 0,
             modified_by: 0,
-            login_date: proper_date(today)
         });
         res.json({
             success: true,
@@ -157,7 +147,7 @@ exports.signup = async(req, res) => {
         });
     }
 };
-exports.signout = async(req, res) => {
+exports.signout = async (req, res) => {
     req.logout();
     return res.json({
         message: "Signout successfully"
