@@ -12,7 +12,9 @@ const cors = require("cors");
 const multer = require("multer");
 var compression = require("compression");
 const helmet = require("helmet");
-//console.log(process.env.PORT)
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
+require('./socket/streams')(io)
 
 //middlewares
 
@@ -48,6 +50,6 @@ const allowCrossDomain = function (req, res, next) {
 };
 app.use(allowCrossDomain);
 
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server is running on ${port}`);
 });
